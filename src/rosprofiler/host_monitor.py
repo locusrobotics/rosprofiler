@@ -36,9 +36,10 @@ class HostMonitor(object):
 
     def update(self):
         """ Record information about the cpu and memory usage for this host into a buffer """
+        memory = psutil.virtual_memory()
         self.cpu_load_log.append(psutil.cpu_percent(interval=0, percpu=True))
-        self.phymem_used_log.append(psutil.used_phymem())
-        self.phymem_avail_log.append(psutil.avail_phymem())
+        self.phymem_used_log.append(memory.used)
+        self.phymem_avail_log.append(memory.available)
 
     def get_statistics(self):
         """ Returns HostStatistics() using buffered information.

@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import re
-import xmlrpclib
+import xmlrpc
 
 import rosgraph
 import rospy
@@ -125,7 +125,7 @@ class Grapher(object):
         # Add connection information reported by nodes
         for node in nodes.values():
             try:
-                node_proxy = xmlrpclib.ServerProxy(node.uri)
+                node_proxy = xmlrpc.client.ServerProxy(node.uri)
                 bus_info = node_proxy.getBusInfo(self._NAME)[2]
                 for bus in bus_info:
                     c = Connection()
@@ -141,7 +141,7 @@ class Grapher(object):
                     c.transport = bus[3]
                     c.topic = bus[4]
                     node.connections.append(c)
-            except xmlrpclib.socket.error:
+            except:
                 rospy.logerr("WANRING: XML RPC ERROR contacting '%s', skipping" % node.name)
                 continue
 

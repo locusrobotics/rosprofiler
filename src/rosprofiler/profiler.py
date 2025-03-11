@@ -23,7 +23,7 @@ import hashlib
 import os
 import re
 import threading
-import xmlrpclib
+import xmlrpc
 
 import rospy
 import rosgraph
@@ -33,8 +33,8 @@ from rosgraph.names import is_legal_name
 from ros_statistics_msgs.msg import NodeStatistics
 from ros_statistics_msgs.msg import HostStatistics
 
-from host_monitor import HostMonitor
-from node_monitor import NodeMonitor
+from .host_monitor import HostMonitor
+from .node_monitor import NodeMonitor
 
 
 def get_ros_hostname():
@@ -60,7 +60,7 @@ def get_sys_hostname():
     Otherwise, return the first 6 digits of the md5sum of the hostname
     """
     hostname = rosgraph.network.get_host_name()
-    return hostname if is_legal_name(hostname) else hashlib.md5(hostname).hexdigest()[:6]
+    return hostname if is_legal_name(hostname) else hashlib.md5(hostname.encode()).hexdigest()[:6]
 
 
 class Profiler(object):
@@ -130,7 +130,7 @@ class Profiler(object):
         # Lock data structures while making changes
         with self._lock:
             # Remove Node monitors for processes that no longer exist
-            for name in self._nodes.keys():
+            for name in self._nodes.copy().keys():
                 if not self._nodes[name].is_running():
                     rospy.loginfo("Removing Monitor for '%s'" % name)
                     self._nodes.pop(name)
@@ -140,12 +140,12 @@ class Profiler(object):
                     rospy.loginfo("Adding Monitor for '%s'" % name)
                     try:
                         uri = self._master.lookupNode(name)
-                        code, msg, pid = xmlrpclib.ServerProxy(uri).getPid('/NODEINFO')
+                        code, msg, pid = xmlrpc.client.ServerProxy(uri).getPid('/NODEINFO')
                         node = NodeMonitor(name, uri, pid)
                     except rosgraph.masterapi.MasterError:
                         rospy.logerr("WARNING: MasterAPI Error trying to contact '%s', skipping" % name)
                         continue
-                    except xmlrpclib.socket.error:
+                    except:
                         rospy.logerr("WANRING: XML RPC ERROR contacting '%s', skipping" % name)
                         continue
                     self._nodes[name] = node
